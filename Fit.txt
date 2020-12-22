@@ -1,0 +1,53 @@
+Fit
+===
+
+主要任务，输入一列向量，以及备选的概率分布，进行分布拟合.
+
+返回每种分布参数估计结果，以及ks检验的统计量、排序
+
+（Anderson-Darling test 还没有找到合适的包来解决）
+
+可能要用到的函数
+
+	scipy.stats.kstest
+
+	scipy.stats.anderson #这个目前只能检验少数几个统计量
+
+
+网上找了一段代码是这样的
+
+import numpy as np
+import pandas as pd
+f=r'总指数.dta'
+df=pd.read_stata(f) #导入数据
+ar=np.array(df)  #转化成矩阵
+total=ar[::,:1:].copy()   #取出向量
+
+
+import scipy.stats as st
+distributions = [st.laplace, st.norm, st.beta, st.burr, st.erlang, st.gennorm, st.gamma, st.gengamma, st.logistic]
+mles = []
+for distribution in distributions:
+    pars = distribution.fit(total)
+    mle = distribution.nnlf(pars, total)
+    mles.append(mle)
+
+results = [(distribution.name, mle) for distribution, mle in zip(distributions, mles)]
+best_fit = sorted(zip(distributions, mles), key=lambda d: d[1])[0]
+print(results)
+这个段代码的排序依据不是我想要的
+
+
+预期最后输出结果差不多是这个样子的，最好能出excel
+
+
+Rank	Distribution		Statistic	Parameters
+1		Beta				0.51625		a1=0.17348  a2=3.7183 a=4.6766E-15  b=2.3001
+2		Cauchy				0.17354		s=0.10896  m=0.17966
+3		Dagum				0.22629		k=2.7169  a=2.0531  b=0.13194
+4		Dagum				0.22629		k=2.7169  a=2.0531  b=0.13194
+5		Gamma				0.24014		a=2.2558  b=0.14468
+6		Gamma				0.2069		a=0.94827  b=0.27297
+7		Gen. Extreme Value	0.12801		k=0.22348  s=0.15234  m=0.12818
+8		Gen. Gamma			0.25856		k=1.2429  a=1.3884  b=0.27297
+
